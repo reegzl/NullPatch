@@ -1,1 +1,60 @@
-# NullPatch
+<p align="center">
+  <pre align="center">
+██████╗░███████╗███████╗░██████╗░███████╗██╗░░░░░
+██╔══██╗██╔════╝██╔════╝██╔════╝░╚══════╝██║░░░░░
+██████╔╝█████╗░░█████╗░░██║  ███╗░█████╗░██║░░░░░
+██╔══██╗██╔══╝░░██╔══╝░░██║   ██║██╔══╝░░██║░░░░░
+██║░░██║███████╗███████╗╚██████╔╝███████╗███████╗
+╚═╝░░╚═╝╚══════╝╚══════╝░╚═════╝░╚══════╝╚══════╝
+  </pre>
+</p>
+
+<p align="center">
+  <b>An advanced, colored CLI utility to streamline Windows Package Manager (winget) updates and package pins.</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Windows-blue?style=flat-square" alt="Platform Windows">
+  <img src="https://img.shields.io/badge/Language-C%23-purple?style=flat-square" alt="Language C#">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT">
+</p>
+
+---
+
+## Overview
+
+**REEGZL** (NullPatch) is a custom terminal wrapper built in C# designed to enhance the native Windows Package Manager (`winget`) experience. By default, standard terminal output can look monotonous and hard to parse. NullPatch intercepts `winget` execution, parses its output streams in real-time, and renders a clean, color-coded interface making it much easier to track upgrades, package IDs, and source pins at a glance.
+
+---
+
+## Features
+
+* **Real-Time Stream Parsing:** Intercepts `winget` stdout/stderr seamlessly without sacrificing execution speed.
+* **Color-Coded CLI Theme:** 
+  * Distinct coloring for execution flags, software versions, available updates, package IDs, and sources.
+  * Clean dark cyan borders and yellow operational completion notifications.
+* **Upgrade & Pin Management:** Simplifies viewing available upgrades and inspecting current package pins.
+* **Lightweight Utility:** Built natively in C# utilizing standard process redirection.
+
+---
+
+## How It Works
+
+NullPatch acts as an intelligent bridge between your inputs and the native `winget` binary:
+1. **Token Processing:** When you pass commands, the utility splits the arguments, evaluating keywords (like `winget`, `upgrade`, or flags like `--`) to assign precise console colors (`ConsoleColor.Gray`, `Cyan`, `White`, etc.).
+2. **Process Execution:** It spins up a background `ProcessStartInfo` pointing to `winget` with `UTF-8` output encoding enabled, safely capturing asynchronous data and error lines.
+3. **Table Reconstruction:** When a data table is detected (such as list or upgrade commands), NullPatch identifies column boundaries (`Id`, `Version`, `Available`, `Source`) and redraws the output row-by-row with custom formatting before closing with clean structural separators.
+
+---
+
+## Getting Started
+
+### Prerequisites
+* Windows 10 / 11
+* [.NET SDK](https://dotnet.microsoft.com/) installed on your system
+* Native `winget` client (App Installer) available via the Microsoft Store or Windows.
+
+### Installation & Building
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/reegzl/NullPatch.git](https://github.com/reegzl/NullPatch.git)
