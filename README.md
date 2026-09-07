@@ -1,16 +1,16 @@
 <p align="center">
   <pre align="center">
-██████╗░███████╗███████╗░██████╗░███████╗██╗░░░░░
-██╔══██╗██╔════╝██╔════╝██╔════╝░╚══════╝██║░░░░░
-██████╔╝█████╗░░█████╗░░██║  ███╗░█████╗░██║░░░░░
-██╔══██╗██╔══╝░░██╔══╝░░██║   ██║██╔══╝░░██║░░░░░
-██║░░██║███████╗███████╗╚██████╔╝███████╗███████╗
-╚═╝░░╚═╝╚══════╝╚══════╝░╚═════╝░╚══════╝╚══════╝
+███╗   ██╗██╗   ██╗██╗     ██╗     ██████╗  █████╗ ████████╗ ██████╗██╗  ██╗
+████╗  ██║██║   ██║██║     ██║     ██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██║  ██║
+██╔██╗ ██║██║   ██║██║     ██║     ██████╔╝███████║   ██║   ██║     ███████║
+██║╚██╗██║██║   ██║██║     ██║     ██╔═══╝ ██╔══██║   ██║   ██║     ██╔══██║
+██║ ╚████║╚██████╔╝███████╗███████╗██║     ██║  ██║   ██║   ╚██████╗██║  ██║
+╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚══════╝╚═╝     ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
   </pre>
 </p>
 
 <p align="center">
-  <b>An advanced, colored CLI utility to streamline Windows Package Manager (winget) updates and package pins.</b>
+  <b>An advanced, colored CLI utility to streamline Windows Package Manager (winget) updates and package pins. Created by REEGZL.</b>
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ## Overview
 
-**REEGZL** (NullPatch) is a custom terminal wrapper built in C# designed to enhance the native Windows Package Manager (`winget`) experience. By default, standard terminal output can look monotonous and hard to parse. NullPatch intercepts `winget` execution, parses its output streams in real-time, and renders a clean, color-coded interface making it much easier to track upgrades, package IDs, and source pins at a glance.
+**NullPatch** is a custom terminal wrapper built in C# by **REEGZL**, designed to enhance the native Windows Package Manager (`winget`) experience. By default, standard terminal output can look monotonous and hard to parse. NullPatch intercepts `winget` execution, parses its output streams in real-time, and renders a clean, color-coded interface making it much easier to track upgrades, package IDs, and source pins at a glance.
 
 ---
 
