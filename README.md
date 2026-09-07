@@ -58,3 +58,15 @@ NullPatch acts as an intelligent bridge between your inputs and the native `wing
 1. Clone the repository:
    ```bash
    git clone [https://github.com/reegzl/NullPatch.git](https://github.com/reegzl/NullPatch.git)
+
+---
+
+## Support the Developer
+
+If NullPatch has made managing your system updates easier or saved you some time, consider supporting its development with crypto:
+
+* **Bitcoin (BTC):** `bc1qm427zm2jxmesulwjd4j95k82ck9h7l9n7wqemt`
+* **Ethereum (ETH):** `0xf6bf5446Efe20f1404016895c6deaf0F22EF76CE`
+* **Stellar (XLM):** `GBDLBCAE75FO3QNB5VWCWMEOIV2GEP7UFPP3CQICPM3KOZ2YVY55E7OJ`
+
+Thanks for checking out the tool!
