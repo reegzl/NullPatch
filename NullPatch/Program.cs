@@ -22,7 +22,7 @@ class Program
 
     static void Main(string[] args)
     {
-        Console.Title = "NullPatch v1.10";
+        Console.Title = "NullPatch v1.11";
         Console.ForegroundColor = ConsoleColor.Green;
         Console.BackgroundColor = ConsoleColor.Black;
         Console.Clear();
@@ -42,7 +42,7 @@ class Program
                                             ");
         Console.WriteLine("==============================================");
         Console.WriteLine("  SYSTEM UPDATE ENGINE // SECURE CLI UTILITY  ");
-        Console.WriteLine("          CREATED BY REEGZL // v1.10          ");
+        Console.WriteLine("          CREATED BY REEGZL // v1.11          ");
         Console.WriteLine("==============================================\n");
     }
 
