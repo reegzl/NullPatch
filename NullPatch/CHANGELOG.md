@@ -1,0 +1,86 @@
+<p align="center">
+  <pre align="center">
+███╗   ██╗██╗   ██╗██╗     ██╗     ██████╗  █████╗ ████████╗ ██████╗██╗  ██╗
+████╗  ██║██║   ██║██║     ██║     ██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██║  ██║
+██╔██╗ ██║██║   ██║██║     ██║     ██████╔╝███████║   ██║   ██║     ███████║
+██║╚██╗██║██║   ██║██║     ██║     ██╔═══╝ ██╔══██║   ██║   ██║     ██╔══██║
+██║ ╚████║╚██████╔╝███████╗███████╗██║     ██║  ██║   ██║   ╚██████╗██║  ██║
+╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚══════╝╚═╝     ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
+  </pre>
+</p>
+
+<p align="center">
+  <b>An advanced, colored CLI utility to streamline Windows Package Manager (winget) updates and package pins. Created by REEGZL.</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Windows-blue?style=flat-square" alt="Platform Windows">
+  <img src="https://img.shields.io/badge/Language-C%23-purple?style=flat-square" alt="Language C#">
+  <img src="https://img.shields.io/badge/Version-v1.10-orange?style=flat-square" alt="Version v1.10">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT">
+</p>
+
+---
+
+## What's New in v1.10
+
+* **Interactive Upgrade Submenu:** Re-architected main menu option 1 to open a dedicated `[UPGRADES]` submenu containing options for interactive package selection, upgrading all packages, checking updates only, and returning to the main menu.
+* **Interactive Uninstall & System Guardrails:** Added `QuickUninstallInteractive()` to let users select and remove installed packages by number or type `all` with explicit confirmation. Built-in safety filters automatically strip out essential and system packages (e.g., Windows internals, store components, core drivers, and runtimes) to prevent accidental system breakage.
+* **Self-Destruct Mode:** Added a self-uninstall feature under main menu option 6 (`Uninstall this app (Self-Destruct)`). This triggers a confirmation sequence, attempts a best-effort winget package uninstallation, and cleans up local executable files.
+* **Silent Background Mode:** Introduced a global `silentMode` toggle (option 5) that executes system-modifying commands (installs, uninstalls, updates) in the background without stealing focus or opening extra terminal windows. Appends a yellow `[SILENT]` indicator directly to the command prompt.
+* **Visual Polish & Custom Formatting:** Updated complex menu item renderers to support tailored delimiters—using `/` for **Manage Pinned Apps (Exclude/Include)** and `-` for **Uninstall this app (Self-Destruct)** with mixed cyan and white text formatting.
+* **Refined Submenu Prompts:** Cleaned up command prompt paths across sub-menus, shifting from colon-separated syntax (e.g., `root@nullpatch:upgrades>`) to a clean space-separated format (`root@nullpatch upgrades>`).
+* **Interactive Transition Delay:** Added a brief 300ms pause (`PauseShort`) between menu actions to improve UI responsiveness and feedback pacing.
+* **Process Window Isolation:** Fixed an issue where background or scanning operations (such as listing active pins or running checks) unnecessarily spawned secondary command prompt tabs. Configured background processes with `UseShellExecute = false` and `CreateNoWindow = true`.
+* **Smart Scope for Silent Mode:** Restricted silent background execution strictly to system-altering tasks (upgrades, installs, uninstalls), ensuring read-only informational commands (like pin lists and update scans) remain fully interactive.
+* **Code Robustness:** Added null-reference safeguards (`?? string.Empty`) across string splitting and argument parsing vectors to resolve compiler warnings under strict nullable reference configurations.
+
+---
+
+## Overview
+
+**NullPatch** is a custom terminal wrapper built in C# by **REEGZL**, designed to enhance the native Windows Package Manager (`winget`) experience. By default, standard terminal output can look monotonous and hard to parse. NullPatch intercepts `winget` execution, parses its output streams in real-time, and renders a clean, color-coded interface making it much easier to track upgrades, package IDs, and source pins at a glance.
+
+---
+
+## Features
+
+* **Real-Time Stream Parsing:** Intercepts `winget` stdout/stderr seamlessly without sacrificing execution speed.
+* **Color-Coded CLI Theme:** 
+  * Distinct coloring for execution flags, software versions, available updates, package IDs, and sources.
+  * Clean dark cyan borders and yellow operational completion notifications.
+* **Upgrade & Pin Management:** Simplifies viewing available upgrades and inspecting current package pins.
+* **Lightweight Utility:** Built natively in C# utilizing standard process redirection.
+
+---
+
+## How It Works
+
+NullPatch acts as an intelligent bridge between your inputs and the native `winget` binary:
+1. **Token Processing:** When you pass commands, the utility splits the arguments, evaluating keywords (like `winget`, `upgrade`, or flags like `--`) to assign precise console colors (`ConsoleColor.Gray`, `Cyan`, `White`, etc.).
+2. **Process Execution:** It spins up a background `ProcessStartInfo` pointing to `winget` with `UTF-8` output encoding enabled, safely capturing asynchronous data and error lines.
+3. **Table Reconstruction:** When a data table is detected (such as list or upgrade commands), NullPatch identifies column boundaries (`Id`, `Version`, `Available`, `Source`) and redraws the output row-by-row with custom formatting before closing with clean structural separators.
+
+---
+
+## Getting Started
+
+### Prerequisites
+* Windows 10 / 11
+* [.NET SDK](https://dotnet.microsoft.com/) installed on your system
+* Native `winget` client (App Installer) available via the Microsoft Store or Windows.
+
+### Installation & Building
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/reegzl/NullPatch.git](https://github.com/reegzl/NullPatch.git)
+
+---
+
+## Support the Developer
+
+If NullPatch has made managing your system updates easier or saved you some time, consider supporting its development with crypto:
+
+* **Bitcoin (BTC):** `bc1qm427zm2jxmesulwjd4j95k82ck9h7l9n7wqemt`
+* **Ethereum (ETH):** `0xf6bf5446Efe20f1404016895c6deaf0F22EF76CE`
+* **Stellar (XLM):** `GBDLBCAE75FO3QNB5VWCWMEOIV2GEP7UFPP3CQICPM3KOZ2YVY55E7OJ`

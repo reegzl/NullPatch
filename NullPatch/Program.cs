@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.IO;
 
 class Program
 {
@@ -13,10 +14,15 @@ class Program
     static int pinTypeColStart = -1;
     static bool inTable = false;
     static string tableSeparator = string.Empty;
+    static bool silentMode = false;
+    static void PauseShort()
+    {
+        try { Thread.Sleep(300); } catch { }
+    }
 
     static void Main(string[] args)
     {
-        Console.Title = "NullPatch v1.01";
+        Console.Title = "NullPatch v1.10";
         Console.ForegroundColor = ConsoleColor.Green;
         Console.BackgroundColor = ConsoleColor.Black;
         Console.Clear();
@@ -36,7 +42,7 @@ class Program
                                             ");
         Console.WriteLine("==============================================");
         Console.WriteLine("  SYSTEM UPDATE ENGINE // SECURE CLI UTILITY  ");
-        Console.WriteLine("               CREATED BY REEGZL              ");
+        Console.WriteLine("          CREATED BY REEGZL // v1.10          ");
         Console.WriteLine("==============================================\n");
     }
 
@@ -48,14 +54,21 @@ class Program
             Console.WriteLine("\n[SELECT AN OPERATION]");
             Console.ResetColor();
 
-            PrintMenuOption("1", "Scan & Update All Apps", "--include-unknown");
-            PrintSimpleMenuOption("2", "Check Available Updates Only");
-            PrintComplexMenuOption("3", "Manage Pinned Apps", "Exclude", "Include");
-            PrintSimpleMenuOption("4", "Force Reset Winget Source Cache");
-            PrintSimpleMenuOption("5", "Exit");
+            PrintSimpleMenuOption("1", "Upgrades");
+            PrintComplexMenuOption("2", "Manage Pinned Apps", "Include", "Exclude");
+            PrintSimpleMenuOption("3", "Force Reset Winget Source Cache");
+            PrintSimpleMenuOption("4", "Uninstall Package");
+            PrintSimpleMenuOption("5", "Toggle Silent Mode");
+            PrintComplexMenuOption("6", "Uninstall this app", "Self", "Destruct", "-");
+            PrintSimpleMenuOption("7", "Exit");
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("\nroot@nullpatch:\\> ");
+            if (silentMode)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[SILENT] ");
+            }
             Console.ForegroundColor = ConsoleColor.White;
 
             string choice = Console.ReadLine() ?? string.Empty;
@@ -64,18 +77,27 @@ class Program
             switch (choice.Trim())
             {
                 case "1":
-                    RunWingetCommand("upgrade --all --include-unknown");
+                    ShowUpgradeMenu();
                     break;
                 case "2":
-                    RunWingetCommand("upgrade --include-unknown");
-                    break;
-                case "3":
                     ShowPinManagerMenu();
                     break;
-                case "4":
+                case "3":
                     ResetWingetCache();
                     break;
+                case "4":
+                    QuickUninstallInteractive();
+                    break;
                 case "5":
+                    silentMode = !silentMode;
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"\nSilent mode {(silentMode ? "enabled" : "disabled")}. Background operations: {silentMode}");
+                    Console.ResetColor();
+                    break;
+                case "6":
+                    SelfDestruct();
+                    return;
+                case "7":
                     ExitSequence();
                     return;
                 default:
@@ -84,8 +106,358 @@ class Program
                     Console.ResetColor();
                     break;
             }
+
+            PauseShort();
+        }
+
+    }
+
+    static void ShowUpgradeMenu()
+    {
+        while (true)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("\n[UPGRADES]");
+            Console.ResetColor();
+
+            PrintSimpleMenuOption("1", "Interactive Upgrade Selection");
+            PrintSimpleMenuOption("2", "Upgrade All Packages");
+            PrintSimpleMenuOption("3", "Check Available Updates Only");
+            PrintSimpleMenuOption("4", "Return to Main Menu");
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\nroot@nullpatch upgrades:\\> ");
+            if (silentMode)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[SILENT] ");
+            }
+            Console.ForegroundColor = ConsoleColor.White;
+
+            string choice = Console.ReadLine() ?? string.Empty;
+            Console.ResetColor();
+
+            switch (choice.Trim())
+            {
+                case "1":
+                    QuickUpgradeInteractive();
+                    break;
+                case "2":
+                    RunWingetCommand("upgrade --all --include-unknown");
+                    break;
+                case "3":
+                    RunWingetCommand("upgrade --include-unknown");
+                    break;
+                case "4":
+                    return;
+                default:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid selection.");
+                    Console.ResetColor();
+                    break;
+            }
+
+            PauseShort();
         }
     }
+
+
+    static void QuickUpgradeInteractive()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("\n[!] Scanning available updates...");
+        Console.ResetColor();
+
+        var packages = new List<(string Name, string Id)>();
+        int idStart = -1;
+        int verStart = -1;
+        bool parsingTable = false;
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "winget",
+            Arguments = "upgrade --include-unknown",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8
+        };
+
+        using (var process = Process.Start(startInfo))
+        {
+            if (process != null)
+            {
+                using (var reader = process.StandardOutput)
+                {
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains("Name") && line.Contains("Id") && line.Contains("Version"))
+                        {
+                            idStart = line.IndexOf("Id");
+                            verStart = line.IndexOf("Version");
+                            parsingTable = true;
+                        }
+                        else if (line.StartsWith("---"))
+                        {
+                         
+                        }
+                        else if (parsingTable)
+                        {
+                            if (string.IsNullOrWhiteSpace(line) || line.Contains("package(s) have pins") || line.Contains("upgrades available"))
+                            {
+                                parsingTable = false;
+                                continue;
+                            }
+
+                            try
+                            {
+                                int p1 = idStart;
+                                int p2 = verStart;
+                                if (p1 > 0 && p2 > p1 && line.Length >= p2)
+                                {
+                                    string name = line.Substring(0, p1).Trim();
+                                    string id = line.Substring(p1, p2 - p1).Trim();
+                                    if (!string.IsNullOrEmpty(id) && !name.Equals("Name"))
+                                    {
+                                        packages.Add((name, id));
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                process.WaitForExit();
+            }
+        }
+
+        if (packages.Count == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nNo pending updates found.");
+            Console.ResetColor();
+            return;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("\n[SELECT AN APP TO UPGRADE]");
+        Console.ResetColor();
+
+        for (int i = 0; i < packages.Count; i++)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write($"  [{i + 1}] ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(packages[i].Name);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(" (");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(packages[i].Id);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(")");
+            Console.ResetColor();
+        }
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter number to upgrade, type ");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("all");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write(" (0 to cancel): ");
+        Console.ForegroundColor = ConsoleColor.White;
+        string input = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
+        Console.ResetColor();
+
+        if (input == "all")
+        {
+            RunWingetCommand("upgrade --all --include-unknown");
+        }
+        else if (int.TryParse(input, out int selection) && selection > 0 && selection <= packages.Count)
+        {
+            string targetId = packages[selection - 1].Id;
+            RunWingetCommand($"upgrade --id {targetId}");
+        }
+    }
+
+    static void QuickUninstallInteractive()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("\n[!] Fetching installed packages...");
+        Console.ResetColor();
+
+        var packages = new List<(string Name, string Id)>();
+        int idStart = -1;
+        int verStart = -1;
+        bool parsingTable = false;
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "winget",
+            Arguments = "list",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8
+        };
+
+        using (var process = Process.Start(startInfo))
+        {
+            if (process != null)
+            {
+                using (var reader = process.StandardOutput)
+                {
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains("Name") && line.Contains("Id") && line.Contains("Version"))
+                        {
+                            idStart = line.IndexOf("Id");
+                            verStart = line.IndexOf("Version");
+                            parsingTable = true;
+                        }
+                        else if (line.StartsWith("---"))
+                        {
+                            
+                        }
+                        else if (parsingTable)
+                        {
+                            if (string.IsNullOrWhiteSpace(line))
+                            {
+                                parsingTable = false;
+                                continue;
+                            }
+
+                            try
+                            {
+                                int p1 = idStart;
+                                int p2 = verStart;
+                                if (p1 > 0 && p2 > p1 && line.Length >= p2)
+                                {
+                                    string name = line.Substring(0, p1).Trim();
+                                    string id = line.Substring(p1, p2 - p1).Trim();
+                                    if (!string.IsNullOrEmpty(id) && !name.Equals("Name"))
+                                    {
+                                        packages.Add((name, id));
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                process.WaitForExit();
+            }
+        }
+
+        if (packages.Count == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nNo installed packages found.");
+            Console.ResetColor();
+            return;
+        }
+
+        // Remove essential/system packages from interactive uninstall list to avoid breaking the system
+        var essentialPatterns = new[]
+        {
+            "microsoft.windows",
+            "microsoft.desktopappinstaller",
+            "microsoft.windowsstore",
+            "microsoft.win32webview2",
+            "microsoft.edge",
+            "microsoft.vc",
+            "microsoft.net",
+            "microsoft.ui",
+            "Microsoft.XNA",
+            "Microsoft.GameInput",
+            "Microsoft.GetHelp",
+            "Microsoft.Xbox",
+            "Microsoft.Web",
+            "Microsoft.Xbox",
+            "MicrosoftCorporation",
+            "windows ",
+            "kernel",
+            "driver",
+            "intel",
+            "nvidia",
+            "realtek",
+            "amd ",
+            "store",
+            "update",
+            "cumulative"
+        };
+
+        packages.RemoveAll(p =>
+            {
+                var id = p.Id?.ToLowerInvariant() ?? string.Empty;
+                var name = p.Name?.ToLowerInvariant() ?? string.Empty;
+                foreach (var pat in essentialPatterns)
+                {
+                    if (id.Contains(pat) || name.Contains(pat)) return true;
+                }
+                return false;
+            }
+        );
+
+        if (packages.Count == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nNo user-installable packages found (system/essential packages were hidden).");
+            Console.ResetColor();
+            return;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("\n[SELECT AN APP TO UNINSTALL]");
+        Console.ResetColor();
+
+        for (int i = 0; i < packages.Count; i++)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write($"  [{i + 1}] ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(packages[i].Name);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(" (");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(packages[i].Id);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(")");
+            Console.ResetColor();
+        }
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter number to uninstall, type ");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("all");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write(" (0 to cancel): ");
+        Console.ForegroundColor = ConsoleColor.White;
+        string input2 = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
+        Console.ResetColor();
+
+        if (input2 == "all")
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("Are you sure you want to uninstall ALL listed packages? (Y/N): ");
+            Console.ForegroundColor = ConsoleColor.White;
+            string conf = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
+            Console.ResetColor();
+            if (conf == "y")
+            {
+                foreach (var pkg in packages)
+                {
+                    RunWingetCommand($"uninstall --id {pkg.Id}");
+                }
+            }
+        }
+        else if (int.TryParse(input2, out int sel) && sel > 0 && sel <= packages.Count)
+        {
+            string targetId = packages[sel - 1].Id;
+            RunWingetCommand($"uninstall --id {targetId}");
+        }
+        }
 
     static void ShowPinManagerMenu()
     {
@@ -103,7 +475,12 @@ class Program
             PrintSimpleMenuOption("6", "Return to Main Menu");
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write("\nroot@nullpatch:pins\\> ");
+            Console.Write("\nroot@nullpatch pins:\\> ");
+            if (silentMode)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[SILENT] ");
+            }
             Console.ForegroundColor = ConsoleColor.White;
 
             string choice = Console.ReadLine() ?? string.Empty;
@@ -165,19 +542,19 @@ class Program
     }
 
     static void PrintMenuOption(string number, string text, string highlight)
-    {
-        Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Write($"  {number}. ");
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.Write($"{text} (");
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write(highlight);
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine(")");
-        Console.ResetColor();
-    }
+{
+    Console.ForegroundColor = ConsoleColor.Gray;
+    Console.Write($"  {number}. ");
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.Write($"{text} (");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.Write(highlight);
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.WriteLine(")");
+    Console.ResetColor();
+}
 
-    static void PrintComplexMenuOption(string number, string text, string opt1, string? opt2)
+    static void PrintComplexMenuOption(string number, string text, string opt1, string? opt2, string separator = "/")
     {
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.Write($"  {number}. ");
@@ -187,12 +564,12 @@ class Program
         Console.Write(opt1);
         if (opt2 != null)
         {
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Write("/");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(separator);
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.Write(opt2);
         }
-        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine(")");
         Console.ResetColor();
     }
@@ -235,7 +612,7 @@ class Program
                         }
                         else if (line.StartsWith("---"))
                         {
-                            // separator reached, skip
+                            
                         }
                         else if (parsingTable)
                         {
@@ -356,7 +733,7 @@ class Program
                         }
                         else if (line.StartsWith("---"))
                         {
-                            // separator reached, skip
+                           
                         }
                         else if (parsingTable)
                         {
@@ -445,19 +822,56 @@ class Program
         Console.Write("\nExecuting: ");
         Console.ResetColor();
 
-        // Always explicitly print "winget" in dark gray first so it's always visible in the command output line
+        // Silent mode should only apply to installation/uninstallation/upgrade actions that change the system.
+        bool silentApplicable = false;
+        if (silentMode)
+        {
+            var arg = arguments?.ToLowerInvariant() ?? string.Empty;
+            if (arg.StartsWith("install") || arg.StartsWith("uninstall") || arg.Contains("upgrade --all") || arg.Contains("upgrade --id") || arg.Contains("upgrade --id"))
+            {
+                silentApplicable = true;
+            }
+        }
+
+        if (silentApplicable)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Launching in silent background mode. No interactive output will be shown.");
+            Console.ResetColor();
+
+            var bgStart = new ProcessStartInfo
+            {
+                FileName = "winget",
+                Arguments = arguments,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            try
+            {
+                Process.Start(bgStart);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Failed to start background operation: {ex.Message}");
+                Console.ResetColor();
+            }
+
+            return;
+        }
+
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.Write("winget ");
         Console.ResetColor();
 
-        // Print colored command string tokens
-        string[] parts = arguments.Split(' ');
+        string[] parts = (arguments ?? string.Empty).Split(' ');
         for (int i = 0; i < parts.Length; i++)
         {
             string part = parts[i];
             if (string.IsNullOrEmpty(part)) continue;
 
-            if (part.Equals("pin", StringComparison.OrdinalIgnoreCase) || part.Equals("upgrade", StringComparison.OrdinalIgnoreCase) || part.Equals("remove", StringComparison.OrdinalIgnoreCase) || part.Equals("add", StringComparison.OrdinalIgnoreCase))
+            if (part.Equals("pin", StringComparison.OrdinalIgnoreCase) || part.Equals("upgrade", StringComparison.OrdinalIgnoreCase) || part.Equals("remove", StringComparison.OrdinalIgnoreCase) || part.Equals("add", StringComparison.OrdinalIgnoreCase) || part.Equals("uninstall", StringComparison.OrdinalIgnoreCase))
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write(part);
@@ -469,7 +883,6 @@ class Program
             }
             else
             {
-                // Values / arguments like package IDs
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(part);
             }
@@ -808,5 +1221,46 @@ class Program
         Console.WriteLine("\nConnection closed. Goodbye.");
         Console.ResetColor();
         Thread.Sleep(500);
+    }
+
+    static void SelfDestruct()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nAre you sure you want to uninstall NullPatch and remove this executable? (Y/N): ");
+        Console.ForegroundColor = ConsoleColor.White;
+        string conf = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
+        Console.ResetColor();
+
+        if (conf == "y")
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nAttempting self-uninstall and removal...");
+            Console.ResetColor();
+
+            try
+            {
+                // try to uninstall via winget if possible (best-effort)
+                string exePath = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+                string exeName = !string.IsNullOrEmpty(exePath) ? Path.GetFileNameWithoutExtension(exePath) : string.Empty;
+                if (!string.IsNullOrEmpty(exeName))
+                {
+                    RunWingetCommand($"uninstall --id {exeName}");
+                }
+            }
+            catch { }
+
+            try
+            {
+                // Attempt to delete the current executable (best-effort; may fail while running)
+                string path = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                {
+                    try { File.Delete(path); } catch { }
+                }
+            }
+            catch { }
+
+            ExitSequence();
+        }
     }
 }
