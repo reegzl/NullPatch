@@ -5,7 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<ApplicationIcon>NullPatch.ico</ApplicationIcon>
-		<AssemblyName>NullPatch v1.10</AssemblyName>
+		<AssemblyName>NullPatch v1.11</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>
