@@ -51,13 +51,29 @@ NullPatch acts as an intelligent bridge between your inputs and the native `wing
 
 ### Prerequisites
 * Windows 10 / 11
-* [.NET SDK](https://dotnet.microsoft.com/) installed on your system
+* [.NET SDK](https://dotnet.microsoft.com/) installed on your system (only required if building from source)
 * Native `winget` client (App Installer) available via the Microsoft Store or Windows.
 
-### Installation & Building
+### Installation & Usage
+
+#### Option A: Download Pre-compiled Binary (Recommended)
+1. Head over to the [NullPatch Releases](https://github.com/reegzl/NullPatch/releases/latest) page.
+2. Download the latest `NullPatch.exe` asset.
+3. Run the executable directly on your system.
+
+#### Option B: Build From Source
 1. Clone the repository:
-   ```bash
+```bash
    git clone [https://github.com/reegzl/NullPatch.git](https://github.com/reegzl/NullPatch.git)
+```
+2. Navigate into the project directory and build a standalone release executable via the .NET CLI:
+```bash
+   cd NullPatch/NullPatch
+```
+```bash
+   dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
+ Your compiled .exe will be generated inside the bin/Release/net10.0/win-x64/publish/ folder.
 
 ---
 
@@ -68,5 +84,6 @@ If NullPatch has made managing your system updates easier or saved you some time
 * **Bitcoin (BTC):** `bc1qm427zm2jxmesulwjd4j95k82ck9h7l9n7wqemt`
 * **Ethereum (ETH):** `0xf6bf5446Efe20f1404016895c6deaf0F22EF76CE`
 * **Stellar (XLM):** `GBDLBCAE75FO3QNB5VWCWMEOIV2GEP7UFPP3CQICPM3KOZ2YVY55E7OJ`
+
 
 Thanks for checking out the tool!
