@@ -26,6 +26,8 @@
 
 * **Documentation & Installation Refinement:** Fixed and completed the Getting Started guide in the README, adding precise instructions for downloading pre-compiled binaries directly from the releases page alongside streamlined command-line build instructions.
 
+* **Executable Naming Convention:** Cleaned up published binary filenames from dot-separated formats (NullPatch.v1.10.exe) to a simple, standard NullPatch.exe for a cleaner look and easier command usage.
+
 ---
 
 ## Getting Started
@@ -39,20 +41,22 @@
 
 #### Option A: Download Pre-compiled Binary (Recommended)
 1. Head over to the [NullPatch Releases](https://github.com/reegzl/NullPatch/releases/latest) page.
-2. Download the latest `NullPatch v1.11.exe` asset.
+2. Download the latest `NullPatch.exe` asset.
 3. Run the executable directly on your system.
 
 #### Option B: Build From Source
 1. Clone the repository:
-   ```bash
+```bash
    git clone [https://github.com/reegzl/NullPatch.git](https://github.com/reegzl/NullPatch.git)
-
+```
 2. Navigate into the project directory and build a standalone release executable via the .NET CLI:
-  ```bash
+```bash
    cd NullPatch/NullPatch
+```
+```bash
    dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
-
-Your compiled .exe will be generated inside the bin/Release/net10.0/win-x64/publish/ folder.
+```
+ Your compiled .exe will be generated inside the bin/Release/net10.0/win-x64/publish/ folder.
 
 ---
 
